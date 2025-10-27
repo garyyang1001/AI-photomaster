@@ -32,6 +32,7 @@ import OutputPanel from './components/OutputPanel';
 import ViewSwitcher from './components/ViewSwitcher';
 import ImageUploader from './components/ImageUploader';
 import GenerationView from './components/GenerationView';
+import { generatePresentation } from './presentationGenerator';
 
 const LOCAL_STORAGE_KEY = 'photographyArchitectRecipes';
 
@@ -398,9 +399,6 @@ const App: React.FC = () => {
           contents: {
             parts: [{ text: generatedPrompt }],
           },
-          config: {
-            responseModalities: [Modality.IMAGE],
-          },
         });
         const part = response.candidates?.[0]?.content?.parts?.[0];
         if (part?.inlineData) {
@@ -457,9 +455,6 @@ Photographer's instruction: "${message}"`;
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [imagePart, textPart] },
-            config: {
-                responseModalities: [Modality.IMAGE],
-            },
         });
         
         const parts = response.candidates?.[0]?.content?.parts;
@@ -476,7 +471,8 @@ Photographer's instruction: "${message}"`;
             if (part.inlineData) {
                 const base64ImageBytes: string = part.inlineData.data;
                 const imageUrl = `data:image/png;base64,${base64ImageBytes}`;
-                setGeneratedImageUrl(imageUrl); // Update main image view
+                setGeneratedImageUrl(imageUrl);
+                setCurrentDisplayImageUrl(imageUrl); // Ensure the main display updates
                 modelResponseItem.imageUrl = imageUrl;
             }
         }
@@ -600,6 +596,7 @@ Photographer's instruction: "${message}"`;
                 onRefineWithImagen={handleRefineWithImagen}
                 isRefining={isRefining}
                 onImageSelectFromHistory={handleImageSelectFromHistory}
+                generatePresentation={generatePresentation}
             />
         );
     }
@@ -761,7 +758,7 @@ Photographer's instruction: "${message}"`;
   }
 
   return (
-    <div className="bg-slate-900 min-h-screen">
+    <div className="bg-slate-900 min-h-screen flex flex-col">
       <header className="text-center p-4 md:p-6">
         <h1 className="text-3xl md:text-4xl font-bold text-cyan-400">AI 攝影企劃：攝影式生圖</h1>
         <p className="mt-2 text-slate-400 max-w-3xl mx-auto">
@@ -769,7 +766,9 @@ Photographer's instruction: "${message}"`;
         </p>
       </header>
       
-      {renderCurrentView()}
+      <div className="flex-grow">
+        {renderCurrentView()}
+      </div>
 
       {/* Floating Action Button for smaller screens */}
        {view !== 'generation' && (

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ConversationItem, ImageModel } from '../types';
+import { generatePresentation } from '../presentationGenerator';
 
 interface GenerationViewProps {
     imageUrl: string | null;
@@ -13,9 +14,10 @@ interface GenerationViewProps {
     onRefineWithImagen: () => void;
     isRefining: boolean;
     onImageSelectFromHistory: (imageUrl: string) => void; // New prop
+    generatePresentation: (conversation: ConversationItem[]) => void;
 }
 
-const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation, onSendMessage, isLoading, error, imageModel, onBackToSettings, onRefineWithImagen, isRefining }) => {
+const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation, onSendMessage, isLoading, error, imageModel, onBackToSettings, onRefineWithImagen, isRefining, onImageSelectFromHistory, generatePresentation }) => {
     const [message, setMessage] = useState('');
     const [photographyPlanInstruction, setPhotographyPlanInstruction] = useState('');
     const conversationEndRef = useRef<HTMLDivElement>(null);
@@ -44,7 +46,7 @@ const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation,
     };
     return (
         <div className="container mx-auto p-4 flex flex-col h-[calc(100vh-70px)]">
-            <div className="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden">
+            <div className="flex-grow flex flex-col md:flex-row gap-4 md:overflow-hidden">
                 {/* Image Display */}
                 <div className="md:w-2/3 lg:w-3/4 bg-slate-950/50 rounded-lg flex items-center justify-center p-4 relative border border-slate-800">
                     {imageUrl ? (
@@ -80,16 +82,28 @@ const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation,
                 <div className="md:w-1/3 lg:w-1/4 bg-slate-800/60 rounded-lg flex flex-col p-4 border border-slate-700/60">
                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
                         <h3 className="text-lg font-semibold text-cyan-400">現場溝通</h3>
-                        <button
-                            onClick={onBackToSettings}
-                            className="text-sm text-slate-300 hover:text-cyan-400 hover:bg-slate-700/50 px-3 py-1 rounded-md transition-colors duration-200 flex items-center space-x-1.5"
-                            aria-label="返回攝影企劃"
-                        >
-                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                            </svg>
-                            <span>返回企劃</span>
-                        </button>
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => generatePresentation(conversation)}
+                                className="text-sm text-slate-300 hover:text-cyan-400 hover:bg-slate-700/50 px-3 py-1 rounded-md transition-colors duration-200 flex items-center space-x-1.5"
+                                aria-label="下載簡報"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                <span>下載簡報</span>
+                            </button>
+                            <button
+                                onClick={onBackToSettings}
+                                className="text-sm text-slate-300 hover:text-cyan-400 hover:bg-slate-700/50 px-3 py-1 rounded-md transition-colors duration-200 flex items-center space-x-1.5"
+                                aria-label="返回攝影企劃"
+                            >
+                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                                </svg>
+                                <span>返回企劃</span>
+                            </button>
+                        </div>
                     </div>
                     {/* Photography Plan Instruction Input */}
                     <div className="mb-4">
