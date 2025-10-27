@@ -346,8 +346,9 @@ const App: React.FC = () => {
       setView('manual');
 
     } catch (err) {
-      console.error(err);
-      setError("圖片分析失敗，請再試一次。");
+      console.error("圖片分析失敗:", JSON.stringify(err, null, 2));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`圖片分析失敗：${errorMessage}。請檢查 API 金鑰或專案設定。`);
     } finally {
       setIsLoading(false);
     }
@@ -403,8 +404,9 @@ const App: React.FC = () => {
       }
 
     } catch (err) {
-      console.error(err);
-      setError("圖像生成失敗，請檢查提示詞或稍後再試。");
+      console.error("圖像生成失敗:", JSON.stringify(err, null, 2));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`圖像生成失敗：${errorMessage}。請檢查 API 金鑰、提示詞或 Google Cloud 設定。`);
     } finally {
       setIsGeneratingImage(false);
     }
@@ -472,8 +474,9 @@ Photographer's instruction: "${message}"`;
         }
 
     } catch (err) {
-        console.error(err);
-        setError("圖像調整失敗，請再試一次。");
+        console.error("圖像調整失敗:", JSON.stringify(err, null, 2));
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(`圖像調整失敗：${errorMessage}。`);
     } finally {
         setIsGeneratingImage(false);
     }
@@ -545,8 +548,9 @@ Photographer's instruction: "${message}"`;
         }
 
     } catch (err) {
-        console.error(err);
-        setError("圖像精修失敗，請再試一次。");
+        console.error("圖像精修失敗:", JSON.stringify(err, null, 2));
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(`圖像精修失敗：${errorMessage}。`);
     } finally {
         setIsRefining(false);
     }
