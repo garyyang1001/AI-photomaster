@@ -44,7 +44,7 @@ const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation,
     };
     return (
         <div className="container mx-auto p-4 flex flex-col h-[calc(100vh-70px)]">
-            <div className="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden">
+            <div className="flex-grow flex flex-col md:flex-row gap-4 md:overflow-hidden">
                 {/* Image Display */}
                 <div className="md:w-2/3 lg:w-3/4 bg-slate-950/50 rounded-lg flex items-center justify-center p-4 relative border border-slate-800">
                     {imageUrl ? (
