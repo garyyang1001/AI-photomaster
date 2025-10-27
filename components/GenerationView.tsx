@@ -12,10 +12,12 @@ interface GenerationViewProps {
     onBackToSettings: () => void;
     onRefineWithImagen: () => void;
     isRefining: boolean;
+    onImageSelectFromHistory: (imageUrl: string) => void; // New prop
 }
 
 const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation, onSendMessage, isLoading, error, imageModel, onBackToSettings, onRefineWithImagen, isRefining }) => {
     const [message, setMessage] = useState('');
+    const [photographyPlanInstruction, setPhotographyPlanInstruction] = useState('');
     const conversationEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -30,13 +32,34 @@ const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation,
         }
     };
 
+    const handleDownloadImage = () => {
+        if (imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'generated_image.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
     return (
         <div className="container mx-auto p-4 flex flex-col h-[calc(100vh-70px)]">
             <div className="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden">
                 {/* Image Display */}
                 <div className="md:w-2/3 lg:w-3/4 bg-slate-950/50 rounded-lg flex items-center justify-center p-4 relative border border-slate-800">
                     {imageUrl ? (
-                        <img src={imageUrl} alt="Generated Art" className="max-w-full max-h-full object-contain rounded-md" />
+                        <>
+                            <img src={imageUrl} alt="Generated Art" className="max-w-full max-h-full object-contain rounded-md" />
+                            <button
+                                onClick={handleDownloadImage}
+                                className="absolute top-4 right-4 p-2 bg-slate-700/70 rounded-full text-white hover:bg-slate-600/70 transition-colors duration-200"
+                                title="下載圖片"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </button>
+                        </>
                     ) : (
                         <div className="text-slate-500">正在等待第一張圖像生成...</div>
                     )}
@@ -68,6 +91,34 @@ const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation,
                             <span>返回企劃</span>
                         </button>
                     </div>
+                    {/* Photography Plan Instruction Input */}
+                    <div className="mb-4">
+                        <h4 className="text-md font-semibold text-slate-300 mb-2">攝影計畫書指令</h4>
+                        <div className="flex space-x-2">
+                            <input
+                                type="text"
+                                value={photographyPlanInstruction}
+                                onChange={(e) => setPhotographyPlanInstruction(e.target.value)}
+                                placeholder="新增攝影計畫書指令..."
+                                className="flex-grow bg-slate-700/50 border border-slate-600 rounded-md px-3 py-2 text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition duration-150"
+                                disabled={isLoading || isRefining}
+                            />
+                            <button
+                                onClick={() => {
+                                    if (photographyPlanInstruction.trim()) {
+                                        onSendMessage(`[攝影計畫書] ${photographyPlanInstruction}`);
+                                        setPhotographyPlanInstruction('');
+                                    }
+                                }}
+                                disabled={isLoading || isRefining || !photographyPlanInstruction.trim()}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                新增指令
+                            </button>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">此欄位用於新增對 AI 模型更宏觀、更具策略性的攝影計畫指令。</p>
+                        <p className="text-xs text-slate-400">例如：「請確保所有生成圖像都帶有復古電影感」或「模特兒的眼神需始終保持憂鬱」。</p>
+                    </div>
                     <div className="flex-grow overflow-y-auto pr-2 space-y-4">
                         {conversation.map((item, index) => (
                             <div key={index} className={`flex ${item.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -82,7 +133,12 @@ const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation,
                                             <p className="text-white px-2 py-1 break-words">{item.text}</p>
                                         )}
                                         {item.imageUrl && (
-                                            <img src={item.imageUrl} alt={`Generated image ${index}`} className="rounded" />
+                                            <img
+                                                src={item.imageUrl}
+                                                alt={`Generated image ${index}`}
+                                                className="rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                                onClick={() => onImageSelectFromHistory(item.imageUrl!)}
+                                            />
                                         )}
                                      </div>
                                 )}

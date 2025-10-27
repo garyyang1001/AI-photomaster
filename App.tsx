@@ -38,6 +38,7 @@ const LOCAL_STORAGE_KEY = 'photographyArchitectRecipes';
 const App: React.FC = () => {
   const [promptData, setPromptData] = useState<PromptData>(INITIAL_PROMPT_DATA);
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
+  const [manualPromptOverride, setManualPromptOverride] = useState<string>(''); // New state for manual override
   const [promptSections, setPromptSections] = useState<PromptSection[]>([]);
   const [view, setView] = useState<'manual' | 'image' | 'generation'>('image');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -47,6 +48,7 @@ const App: React.FC = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
   const [isRefining, setIsRefining] = useState<boolean>(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [currentDisplayImageUrl, setCurrentDisplayImageUrl] = useState<string | null>(null); // New state
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<string>('');
   const [lockedGroups, setLockedGroups] = useState<Set<string>>(new Set());
@@ -128,28 +130,36 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const sections = generatePromptSections(promptData);
-    setPromptSections(sections);
-    const text = sections.map(s => s.text).join('\n\n');
-    setGeneratedPrompt(text);
-  }, [promptData, generatePromptSections]);
+    if (manualPromptOverride) {
+      setGeneratedPrompt(manualPromptOverride);
+      setPromptSections([{ group: '_manual', text: manualPromptOverride }]); // Represent manual override as a single section
+    } else {
+      const sections = generatePromptSections(promptData);
+      setPromptSections(sections);
+      const text = sections.map(s => s.text).join('\n\n');
+      setGeneratedPrompt(text);
+    }
+  }, [promptData, generatePromptSections, manualPromptOverride]);
 
   const handleReset = () => {
     setPromptData(INITIAL_PROMPT_DATA);
     setImageFile(null);
     setError(null);
     setGeneratedImageUrl(null);
+    setCurrentDisplayImageUrl(null); // Clear current display image on reset
     setConversation([]);
     setView('image');
     setSelectedPreset('');
     setSelectedRecipe('');
     setLockedGroups(new Set());
+    setManualPromptOverride(''); // Clear manual override on reset
   };
 
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const presetName = e.target.value;
     setSelectedPreset(presetName);
     setSelectedRecipe('');
+    setManualPromptOverride(''); // Clear manual override on template change
 
     const preset = PRESETS.find(p => p.name === presetName);
 
@@ -171,63 +181,65 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleRandomize = useCallback(() => {
-    const getRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-    
-    setPromptData(currentPromptData => {
-        const fieldsToRandomize: (keyof PromptData)[] = [
-            'aspectRatio', 'composition', 'angle', 'framing', 'lightQuality', 
-            'filmEffect', 'filmSimulation', 'activityTheme', 'charPersonality', 
-            'charOutfit', 'sceneType', 'emotionalAtmosphere', 'overallStyle', 
-            'mainColor1', 'mainColor2', 'finalVibe', 'charAction'
-        ];
-        
-        const randomGenerators: { [key in Exclude<keyof PromptData, 'imageModel'>]?: () => string } = {
-            aspectRatio: () => getRandom(ASPECT_RATIOS).value,
-            composition: () => getRandom(COMPOSITION_OPTIONS).value,
-            angle: () => getRandom(ANGLE_OPTIONS).value,
-            framing: () => getRandom(FRAMING_PRINCIPLES).value,
-            lightQuality: () => getRandom(LIGHT_QUALITIES).value,
-            filmEffect: () => getRandom(FILM_EFFECT_OPTIONS).value,
-            filmSimulation: () => getRandom(FILM_SIMULATION_OPTIONS).value,
-            activityTheme: () => getRandom(INSPIRATION_THEMES),
-            charPersonality: () => getRandom(INSPIRATION_PERSONALITIES),
-            charOutfit: () => getRandom(INSPIRATION_OUTFITS),
-            sceneType: () => getRandom(INSPIRATION_SCENES),
-            emotionalAtmosphere: () => getRandom(INSPIRATION_ATMOSPHERES),
-            overallStyle: () => getRandom(INSPIRATION_STYLES),
-            mainColor1: () => getRandom(INSPIRATION_COLORS_PRIMARY),
-            mainColor2: () => getRandom(INSPIRATION_COLORS_SECONDARY),
-            finalVibe: () => getRandom(INSPIRATION_ATMOSPHERES),
-            charAction: () => getRandom(INSPIRATION_ACTIONS),
-        };
-
-        const randomizedFields: Partial<PromptData> = {};
-        for (const key of fieldsToRandomize) {
-            const group = FULL_FIELD_TO_GROUP_MAP[key];
-            if (!lockedGroups.has(group)) {
-                const generator = randomGenerators[key as keyof typeof randomGenerators];
-                if (generator) {
-                    (randomizedFields as any)[key] = generator();
-                }
-            }
-        }
-
-        const newData: PromptData = { ...INITIAL_PROMPT_DATA };
-        for (const key in currentPromptData) {
-            const typedKey = key as keyof PromptData;
-            const group = FULL_FIELD_TO_GROUP_MAP[typedKey];
-            if (group && lockedGroups.has(group)) {
-                newData[typedKey] = currentPromptData[typedKey];
-            }
-        }
-        return { ...newData, ...randomizedFields };
-    });
-
-    setSelectedPreset('');
-    setSelectedRecipe('');
-  }, [lockedGroups]);
-
+    const handleRandomize = useCallback(() => {
+      const getRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+      
+      setPromptData(currentPromptData => {
+          const fieldsToRandomize: (keyof PromptData)[] = [
+              'aspectRatio', 'composition', 'angle', 'framing', 'lightQuality', 
+              'filmEffect', 'filmSimulation', 'activityTheme', 'charPersonality', 
+              'charOutfit', 'sceneType', 'emotionalAtmosphere', 'overallStyle', 
+              'mainColor1', 'mainColor2', 'finalVibe', 'charAction'
+          ];
+          
+          const randomGenerators: { [key in Exclude<keyof PromptData, 'imageModel'>]?: () => string } = {
+              aspectRatio: () => getRandom(ASPECT_RATIOS).value,
+              composition: () => getRandom(COMPOSITION_OPTIONS).value,
+              angle: () => getRandom(ANGLE_OPTIONS).value,
+              framing: () => getRandom(FRAMING_PRINCIPLES).value,
+              lightQuality: () => getRandom(LIGHT_QUALITIES).value,
+              filmEffect: () => getRandom(FILM_EFFECT_OPTIONS).value,
+              filmSimulation: () => getRandom(FILM_SIMULATION_OPTIONS).value,
+              activityTheme: () => getRandom(INSPIRATION_THEMES),
+              charPersonality: () => getRandom(INSPIRATION_PERSONALITIES),
+              charOutfit: () => getRandom(INSPIRATION_OUTFITS),
+              sceneType: () => getRandom(INSPIRATION_SCENES),
+              emotionalAtmosphere: () => getRandom(INSPIRATION_ATMOSPHERES),
+              overallStyle: () => getRandom(INSPIRATION_STYLES),
+              mainColor1: () => getRandom(INSPIRATION_COLORS_PRIMARY),
+              mainColor2: () => getRandom(INSPIRATION_COLORS_SECONDARY),
+              finalVibe: () => getRandom(INSPIRATION_ATMOSPHERES),
+              charAction: () => getRandom(INSPIRATION_ACTIONS),
+          };
+  
+          const randomizedFields: Partial<PromptData> = {};
+          for (const key of fieldsToRandomize) {
+              const group = FULL_FIELD_TO_GROUP_MAP[key];
+              if (!lockedGroups.has(group)) {
+                  const generator = randomGenerators[key as keyof typeof randomGenerators];
+                  if (generator) {
+                      (randomizedFields as any)[key] = generator();
+                  } 
+              }
+          }
+  
+          const newData: PromptData = { ...INITIAL_PROMPT_DATA };
+          for (const key in currentPromptData) {
+              const typedKey = key as keyof PromptData;
+              const group = FULL_FIELD_TO_GROUP_MAP[typedKey];
+              if (group && lockedGroups.has(group)) {
+                  newData[typedKey] = currentPromptData[typedKey];
+              } else if (typedKey === 'imageModel') { // Ensure imageModel is handled if not in a group
+                  newData[typedKey] = currentPromptData[typedKey];
+              }
+          }
+          return { ...newData, ...randomizedFields };
+      });
+  
+      setSelectedPreset('');
+      setSelectedRecipe('');
+      setManualPromptOverride(''); // Clear manual override on randomize
+    }, [lockedGroups]);
   const handleSaveRecipe = useCallback(() => {
     const name = window.prompt("請為您的攝影配方命名：");
     if (name) {
@@ -246,6 +258,7 @@ const App: React.FC = () => {
     const name = e.target.value;
     setSelectedRecipe(name);
     setSelectedPreset('');
+    setManualPromptOverride(''); // Clear manual override on recipe load
     if (name && savedRecipes[name]) {
       setPromptData(savedRecipes[name]);
     }
@@ -259,6 +272,7 @@ const App: React.FC = () => {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newRecipes));
       setSelectedRecipe('');
       setPromptData(INITIAL_PROMPT_DATA); 
+      setManualPromptOverride(''); // Clear manual override on recipe delete
     }
   }, [selectedRecipe, savedRecipes]);
 
@@ -399,6 +413,7 @@ const App: React.FC = () => {
 
       if (imageUrl) {
         setGeneratedImageUrl(imageUrl);
+        setCurrentDisplayImageUrl(imageUrl); // Update current display image
         setConversation([{ role: 'model', imageUrl }]);
         setView('generation');
       }
@@ -412,7 +427,7 @@ const App: React.FC = () => {
   };
   
   const handleSendMessage = async (message: string) => {
-    if (!message.trim() || !generatedImageUrl) return;
+    if (!message.trim() || !currentDisplayImageUrl) return; // Use currentDisplayImageUrl
 
     const newConversation: ConversationItem[] = [...conversation, { role: 'user', text: message }];
     setConversation(newConversation);
@@ -423,7 +438,7 @@ const App: React.FC = () => {
         const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
         const imagePart = {
             inlineData: {
-                data: generatedImageUrl.split(',')[1],
+                data: currentDisplayImageUrl.split(',')[1], // Use currentDisplayImageUrl
                 mimeType: 'image/png',
             },
         };
@@ -480,23 +495,22 @@ Photographer's instruction: "${message}"`;
     }
   };
 
-  const handleRefineWithImagen = async () => {
-    if (!generatedImageUrl) return;
-
-    setIsRefining(true);
-    setError(null);
-
-    try {
-        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
-
-        // Step 1: Analyze the current image to generate a detailed prompt
-        const imagePart = {
-            inlineData: {
-                data: generatedImageUrl.split(',')[1],
-                mimeType: 'image/png',
-            },
-        };
-        const textToPromptText = `你是一位頂尖的提示詞工程師與藝術總監。你的唯一任務是將這張圖片，轉換成一段極其詳細、生動且充滿藝術感的文字提示詞，這段提示詞將專門用於 Imagen 4.0 模型，以重新生成一張風格與內容都極度相似的高品質圖像。
+    const handleRefineWithImagen = async () => {
+      if (!currentDisplayImageUrl) return; // Use currentDisplayImageUrl
+  
+      setIsRefining(true);
+      setError(null);
+  
+      try {
+          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
+  
+          // Step 1: Analyze the current image to generate a detailed prompt
+          const imagePart = { 
+              inlineData: {
+                  data: currentDisplayImageUrl.split(',')[1], // Use currentDisplayImageUrl
+                  mimeType: 'image/png',
+              },
+          };        const textToPromptText = `你是一位頂尖的提示詞工程師與藝術總監。你的唯一任務是將這張圖片，轉換成一段極其詳細、生動且充滿藝術感的文字提示詞，這段提示詞將專門用於 Imagen 4.0 模型，以重新生成一張風格與內容都極度相似的高品質圖像。
 
         **分析與描述重點：**
         1.  **整體風格與氛圍**: 精準描述藝術風格（例如：日系電影感、賽博龐克、油畫質感）、光影氛圍與整體情緒。
@@ -537,6 +551,7 @@ Photographer's instruction: "${message}"`;
         
         if (newImageUrl) {
             setGeneratedImageUrl(newImageUrl);
+            setCurrentDisplayImageUrl(newImageUrl); // Update current display image
             const newConversationItem: ConversationItem = {
                 role: 'model',
                 text: `好的，這是我使用 Imagen 4.0 為您精修後的版本，參考了剛才的討論結果！`,
@@ -567,11 +582,15 @@ Photographer's instruction: "${message}"`;
     setView('manual');
   };
 
+  const handleImageSelectFromHistory = useCallback((imageUrl: string) => {
+    setCurrentDisplayImageUrl(imageUrl);
+  }, []);
+
   const renderCurrentView = () => {
     if (view === 'generation') {
         return (
             <GenerationView 
-                imageUrl={generatedImageUrl}
+                imageUrl={currentDisplayImageUrl} // Use currentDisplayImageUrl
                 conversation={conversation}
                 onSendMessage={handleSendMessage}
                 isLoading={isGeneratingImage}
@@ -580,6 +599,7 @@ Photographer's instruction: "${message}"`;
                 onBackToSettings={handleBackToSettings}
                 onRefineWithImagen={handleRefineWithImagen}
                 isRefining={isRefining}
+                onImageSelectFromHistory={handleImageSelectFromHistory}
             />
         );
     }
@@ -732,6 +752,7 @@ Photographer's instruction: "${message}"`;
                     onRandomize={handleRandomize}
                     onSaveRecipe={handleSaveRecipe}
                     onGenerateImage={handleGenerateImage}
+                    onUpdatePromptText={setManualPromptOverride} // Pass the setter for manual override
                     isGenerating={isGeneratingImage}
                 />
             </div>

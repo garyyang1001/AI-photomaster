@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PromptSection } from '../types';
 
 interface OutputPanelProps {
@@ -10,11 +10,17 @@ interface OutputPanelProps {
   onRandomize: () => void;
   onSaveRecipe: () => void;
   onGenerateImage: () => void;
+  onUpdatePromptText: (newText: string) => void;
   isGenerating: boolean;
 }
 
-const OutputPanel: React.FC<OutputPanelProps> = ({ promptText, promptSections, onSectionClick, onReset, onRandomize, onSaveRecipe, onGenerateImage, isGenerating }) => {
+const OutputPanel: React.FC<OutputPanelProps> = ({ promptText, promptSections, onSectionClick, onReset, onRandomize, onSaveRecipe, onGenerateImage, onUpdatePromptText, isGenerating }) => {
   const [copyButtonText, setCopyButtonText] = useState('複製提示詞');
+  const [editablePromptText, setEditablePromptText] = useState(promptText);
+
+  useEffect(() => {
+    setEditablePromptText(promptText);
+  }, [promptText]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(promptText);
@@ -49,20 +55,15 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ promptText, promptSections, o
             </button>
         </div>
       </div>
-      <div className="flex-grow bg-slate-900/70 rounded-md p-2 space-y-2 overflow-auto font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed min-h-[300px]">
-        {promptSections.map((section, index) => {
-          const isClickable = section.group !== '_internal';
-          return (
-            <div
-              key={index}
-              onClick={() => isClickable && onSectionClick(section.group)}
-              className={`${isClickable ? 'cursor-pointer hover:bg-slate-800/60' : ''} p-2 rounded-md transition-colors duration-200`}
-            >
-              {section.text}
-            </div>
-          );
-        })}
-      </div>
+      <textarea
+        className="flex-grow bg-slate-900/70 rounded-md p-2 font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed min-h-[300px] focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+        value={editablePromptText}
+        onChange={(e) => {
+          setEditablePromptText(e.target.value);
+          onUpdatePromptText(e.target.value);
+        }}
+        rows={10} // Adjust rows as needed
+      ></textarea>
        <div className="mt-4 pt-4 border-t border-slate-700 flex items-center space-x-2">
          <button
             onClick={handleCopy}
