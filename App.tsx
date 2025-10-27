@@ -284,7 +284,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
       const imagePart = await fileToGenerativePart(imageFile);
       
       const textPart = {
@@ -357,7 +357,7 @@ const App: React.FC = () => {
     setIsGeneratingImage(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
       let imageUrl: string | null = null;
       
       if (promptData.imageModel === 'imagen-4.0-generate-001') {
@@ -419,7 +419,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
         const imagePart = {
             inlineData: {
                 data: generatedImageUrl.split(',')[1],
@@ -486,7 +486,7 @@ Photographer's instruction: "${message}"`;
     setError(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
 
         // Step 1: Analyze the current image to generate a detailed prompt
         const imagePart = {
