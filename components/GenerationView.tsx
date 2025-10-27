@@ -15,7 +15,7 @@ interface GenerationViewProps {
     onImageSelectFromHistory: (imageUrl: string) => void; // New prop
 }
 
-const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation, onSendMessage, isLoading, error, imageModel, onBackToSettings, onRefineWithImagen, isRefining }) => {
+const GenerationView: React.FC<GenerationViewProps> = ({ imageUrl, conversation, onSendMessage, isLoading, error, imageModel, onBackToSettings, onRefineWithImagen, isRefining, onImageSelectFromHistory }) => {
     const [message, setMessage] = useState('');
     const [photographyPlanInstruction, setPhotographyPlanInstruction] = useState('');
     const conversationEndRef = useRef<HTMLDivElement>(null);
