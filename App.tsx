@@ -476,7 +476,8 @@ Photographer's instruction: "${message}"`;
             if (part.inlineData) {
                 const base64ImageBytes: string = part.inlineData.data;
                 const imageUrl = `data:image/png;base64,${base64ImageBytes}`;
-                setGeneratedImageUrl(imageUrl); // Update main image view
+                setGeneratedImageUrl(imageUrl);
+                setCurrentDisplayImageUrl(imageUrl); // Ensure the main display updates
                 modelResponseItem.imageUrl = imageUrl;
             }
         }
