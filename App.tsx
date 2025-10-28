@@ -500,8 +500,8 @@ Photographer's instruction: "${message}"`;
           const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
   
           // Step 1: Analyze the current image to generate a detailed prompt
-          const imagePart = { 
-              inlineData: {
+          const imagePart = {
+              inline_data: {
                   data: currentDisplayImageUrl.split(',')[1], // Use currentDisplayImageUrl
                   mimeType: 'image/png',
               },
