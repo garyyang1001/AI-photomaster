@@ -284,7 +284,7 @@ const App: React.FC = () => {
       reader.readAsDataURL(file);
     });
     return {
-      inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+      inline_data: { data: await base64EncodedDataPromise, mimeType: file.type },
     };
   };
 
@@ -298,7 +298,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
       const imagePart = await fileToGenerativePart(imageFile);
       
       const textPart = {
@@ -371,7 +371,7 @@ const App: React.FC = () => {
     setIsGeneratingImage(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
       let imageUrl: string | null = null;
       console.log("Generated Prompt:", generatedPrompt); // Added for debugging
       
@@ -400,8 +400,8 @@ const App: React.FC = () => {
           },
         });
         const part = response.candidates?.[0]?.content?.parts?.[0];
-        if (part?.inlineData) {
-          const base64ImageBytes: string = part.inlineData.data;
+        if (part?.inline_data) {
+          const base64ImageBytes: string = part.inline_data.data;
           imageUrl = `data:image/png;base64,${base64ImageBytes}`;
         } else {
           throw new Error("Gemini Flash API 未返回有效的圖像數據。");
@@ -432,9 +432,9 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
         const imagePart = {
-            inlineData: {
+            inline_data: {
                 data: currentDisplayImageUrl.split(',')[1], // Use currentDisplayImageUrl
                 mimeType: 'image/png',
             },
@@ -467,8 +467,8 @@ Photographer's instruction: "${message}"`;
             if (part.text) {
                 modelResponseItem.text = (modelResponseItem.text || '') + part.text;
             }
-            if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
+            if (part.inline_data) {
+                const base64ImageBytes: string = part.inline_data.data;
                 const imageUrl = `data:image/png;base64,${base64ImageBytes}`;
                 setGeneratedImageUrl(imageUrl);
                 setCurrentDisplayImageUrl(imageUrl); // Ensure the main display updates
@@ -497,7 +497,7 @@ Photographer's instruction: "${message}"`;
       setError(null);
   
       try {
-          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY as string });
+          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
   
           // Step 1: Analyze the current image to generate a detailed prompt
           const imagePart = { 
