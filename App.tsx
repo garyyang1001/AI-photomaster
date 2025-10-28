@@ -373,7 +373,6 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
       let imageUrl: string | null = null;
-      console.log("Generated Prompt:", generatedPrompt); // Added for debugging
       
       if (promptData.imageModel === 'imagen-4.0-generate-001') {
         const response = await ai.models.generateImages({
@@ -398,9 +397,12 @@ const App: React.FC = () => {
           contents: {
             parts: [{ text: generatedPrompt }],
           },
+          config: {
+            responseMimeType: 'image/png',
+          }
         });
         const part = response.candidates?.[0]?.content?.parts?.[0];
-        if (part?.inline_data) {
+        if (part && part.inline_data) {
           const base64ImageBytes: string = part.inline_data.data;
           imageUrl = `data:image/png;base64,${base64ImageBytes}`;
         } else {

@@ -379,7 +379,7 @@ export const INITIAL_PROMPT_DATA: PromptData = {
   finalVibe: '',
   seriesName: '',
   modelTone: '',
-  imageModel: 'gemini-2.5-flash-image',
+  imageModel: 'imagen-4.0-generate-001',
 };
 
 export const PROMPT_SCHEMA = {
